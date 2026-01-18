@@ -1,0 +1,10 @@
+## Interface: 30300
+## Title: AltTooltips
+## Notes: Shows LibAlt data in character tooltips
+## Author: Nikola Tasic
+## RequiredDeps: LibAlts-1.0
+## Version: 1.0.0
+## SavedVariables: AltTooltipsDB
+
+AltTooltips.lua
+
