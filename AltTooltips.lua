@@ -19,8 +19,8 @@ function AltTooltips_HookSetUnit(...)
     local main = AltTooltips_GetMain(name)
 
     if main then
-        local class = CHAR_INFO[name] and CHAR_INFO[name].class
-        local colorStr = class and RAID_CLASS_COLORS[strupper(class)].colorStr or "cff00FF00"
+        local class = CHAR_INFO[main] and CHAR_INFO[main].class
+        local colorStr = class and RAID_CLASS_COLORS[strupper(class)].colorStr or "ff00FF00"
         GameTooltip:AddLine("|c"..colorStr..TitleCase(main).."|r|cffffffff's alt|r")
     end
 end
@@ -46,20 +46,30 @@ function AltTooltips_Initialize()
 	CHAR_INFO = {}
 
 	for i=1,GetNumGuildMembers(true) do
-		local name = GetGuildRosterInfo(i)
+		local name, _, _, _, class, _, _, _, _, _ = GetGuildRosterInfo(i);
         if name then
             names[strlower(name)] = name
+            CHAR_INFO[name] = {name = name, class = class}
         end
 	end
 
 	for i=1, GetNumGuildMembers(true) do
-		local alt, rank, _, _, class, _, note, _, _, _ = GetGuildRosterInfo(i);
+		local alt, rank, _, _, class, _, note, officernote, _, _ = GetGuildRosterInfo(i);
 		local success
+        if officernote then
+            for word in gmatch(strlower(officernote), "[%a\128-\255]+") do
+                local main = names[word]
+                if main then
+                    AltTooltips_AddAlt(main, alt)
+                    success = true
+                    break
+                end
+            end
+        end
         if not note then return end
 		for word in gmatch(strlower(note), "[%a\128-\255]+") do
             local main = names[word]
 			if main then
-				CHAR_INFO[alt] = {name = main, class = class}
                 AltTooltips_AddAlt(main, alt)
 				success = true
 				break
@@ -86,6 +96,8 @@ function AltTooltips_EventHandler(self, event, ...)
 end
 
 GameTooltip:HookScript("OnTooltipSetUnit", AltTooltips_HookSetUnit)
+GameTooltipStatusBar:HookScript("OnValueChanged", AltTooltips_HookSetUnit)
+--GameTooltip:HookScript("GameTooltip_SetDefaultAnchor", AltTooltips_HookSetUnit)
 local frame = CreateFrame("Frame", "AltTooltipsFrame", UIParent)
 frame:RegisterEvent("GUILD_ROSTER_UPDATE", AltTooltips_Initialize)
 frame:SetScript("OnEvent", AltTooltips_EventHandler)
